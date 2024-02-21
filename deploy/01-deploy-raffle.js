@@ -36,7 +36,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     networkConfig[chainId]["gasLane"],
     subscriptionId,
     networkConfig[chainId]["callbackGasLimit"],
-    networkConfig[chainId]["keepersUpdateInterval"],
+    networkConfig[chainId]["interval"],
   ];
 
   const raffle = await deploy("Raffle", {
