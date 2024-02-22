@@ -30,7 +30,6 @@ chai.use(eventemitter2());
       describe("constructor", async () => {
         it("Initialize the raffle correctly", async () => {
           const raffleState = await raffle.getRaffleState();
-          const interval = await raffle.getInterval();
           assert(raffleState.toString(), "0");
           assert(interval.toString(), networkConfig[chainId]["interval"]);
         });
@@ -60,11 +59,26 @@ chai.use(eventemitter2());
         it("emits event on enter", async () => {
           await expect(
             raffle.enterRaffle({ value: raffleEntranceFee })
-          ).to.emit(
-            // emits RaffleEnter event if entered to index player(s) address
-            raffle,
-            "RaffleEnter"
-          );
+          ).to.emit(raffle, "RaffleEnter");
+        });
+
+        it("doesn't allow entrance when raffle is calculating", async () => {
+          await raffle.enterRaffle({ value: raffleEntranceFee });
+          await network.provider.send("evm_increaseTime", [
+            Number(interval) + 1,
+          ]);
+          await network.provider.request({ method: "evm_mine", params: [] });
+          // we pretend to be a keeper for a second
+          await raffle.performUpkeep("0x"); // changes the state to calculating for our comparison below
+          try {
+            await raffle.enterRaffle({ value: raffleEntranceFee });
+            assert.fail("Entrance should have reverted");
+          } catch (error) {
+            assert(
+              error.message.includes("revert"),
+              `Expected "revert", got ${error}`
+            );
+          }
         });
       });
     });
