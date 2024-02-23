@@ -197,79 +197,80 @@ chai.use(eventemitter2());
           }
         });
 
-        // it("picks a winner, resets, and sends money", async () => {
-        //   const additionalEntrances = 3; // to test
-        //   const startingIndex = 2;
-        //   const accounts = await ethers.getSigners();
-        //   let startingBalance;
-        //   for (
-        //     let i = startingIndex;
-        //     i < startingIndex + additionalEntrances;
-        //     i++
-        //   ) {
-        //     const accountConnectedRaffle = raffle.connect(accounts[i]); // Returns a new instance of the Raffle contract connected to player
-        //     await accountConnectedRaffle.enterRaffle({
-        //       value: raffleEntranceFee,
-        //     });
-        //   }
-        //   const startingTimeStamp = await raffle.getLastTimeStamp(); // stores starting timestamp (before we fire our event)
+        it("picks a winner, resets, and sends money", async () => {
+          const additionalEntrances = 3; // to test
+          const startingIndex = 2;
+          const accounts = await ethers.getSigners();
+          let startingBalance;
+          for (
+            let i = startingIndex;
+            i < startingIndex + additionalEntrances;
+            i++
+          ) {
+            const accountConnectedRaffle = raffle.connect(accounts[i]); // Returns a new instance of the Raffle contract connected to player
+            await accountConnectedRaffle.enterRaffle({
+              value: raffleEntranceFee,
+            });
+          }
+          const startingTimeStamp = await raffle.getLastTimeStamp(); // stores starting timestamp (before we fire our event)
 
-        //   await new Promise(async (resolve, reject) => {
-        //     raffle.once("WinnerPicked", async () => {
-        //       // event listener for WinnerPicked
-        //       console.log("WinnerPicked event fired!");
-        //       // assert throws an error if it fails, so we need to wrap
-        //       // it in a try/catch so that the promise returns event
-        //       // if it fails.
-        //       try {
-        //         // Now lets get the ending values...
-        //         const recentWinner = await raffle.getRecentWinner();
-        //         const raffleState = await raffle.getRaffleState();
-        //         const winnerBalance = await ethers.provider.getBalance(
-        //           accounts[2]
-        //         );
-        //         const endingTimeStamp = await raffle.getLastTimeStamp();
-        //         // Comparisons to check if our ending values are correct:
-        //         try {
-        //           await raffle.getPlayer(0);
-        //           assert.fail("Transaction did not revert");
-        //         } catch (error) {
-        //           assert.include(
-        //             error.message,
-        //             "revert",
-        //             "Transaction should revert"
-        //           );
-        //         }
-        //         assert.equal(recentWinner.toString(), accounts[2].address);
-        //         assert.equal(raffleState, 0);
-        //         assert.equal(
-        //           winnerBalance.toString(),
-        //           startingBalance + // startingBalance + ( (raffleEntranceFee * additionalEntrances) + raffleEntranceFee )
-        //             (
-        //               raffleEntranceFee * BigInt(additionalEntrances) +
-        //               raffleEntranceFee
-        //             ).toString()
-        //         );
-        //         assert(endingTimeStamp > startingTimeStamp);
-        //         resolve(); // if try passes, resolves the promise
-        //       } catch (e) {
-        //         reject(e); // if try fails, rejects the promise
-        //       }
-        //     });
+          await new Promise(async (resolve, reject) => {
+            raffle.once("WinnerPicked", async () => {
+              // event listener for WinnerPicked
+              console.log("WinnerPicked event fired!");
+              // assert throws an error if it fails, so we need to wrap
+              // it in a try/catch so that the promise returns event
+              // if it fails.
+              try {
+                // Now lets get the ending values...
+                const recentWinner = await raffle.getRecentWinner();
+                const raffleState = await raffle.getRaffleState();
+                const winnerBalance = await ethers.provider.getBalance(
+                  accounts[2]
+                );
+                const endingTimeStamp = await raffle.getLastTimeStamp();
+                // Comparisons to check if our ending values are correct:
+                try {
+                  await raffle.getPlayer(0);
+                  assert.fail("Transaction did not revert");
+                } catch (error) {
+                  assert.include(
+                    error.message,
+                    "revert",
+                    "Transaction should revert"
+                  );
+                }
 
-        //     // kicking off the event by mocking the chainlink keepers and vrf coordinator
-        //     try {
-        //       const tx = await raffle.performUpkeep("0x");
-        //       const txReceipt = await tx.wait(1);
-        //       startingBalance = await ethers.provider.getBalance(accounts[2]);
-        //       await vrfCoordinatorV2Mock.fulfillRandomWords(
-        //         txReceipt.logs[1].args.requestId,
-        //         raffle.target
-        //       );
-        //     } catch (e) {
-        //       reject(e);
-        //     }
-        //   });
-        // });
+                assert.equal(recentWinner.toString(), accounts[2].address);
+                assert.equal(raffleState, 0);
+                assert.equal(
+                  winnerBalance.toString(),
+                  (
+                    startingBalance + // startingBalance + ( (raffleEntranceFee * additionalEntrances) + raffleEntranceFee )
+                    (raffleEntranceFee * BigInt(additionalEntrances) +
+                      raffleEntranceFee)
+                  ).toString()
+                );
+                assert(endingTimeStamp > startingTimeStamp);
+                resolve(); // if try passes, resolves the promise
+              } catch (e) {
+                reject(e); // if try fails, rejects the promise
+              }
+            });
+
+            // kicking off the event by mocking the chainlink keepers and vrf coordinator
+            try {
+              const tx = await raffle.performUpkeep("0x");
+              const txReceipt = await tx.wait(1);
+              startingBalance = await ethers.provider.getBalance(accounts[2]);
+              await vrfCoordinatorV2Mock.fulfillRandomWords(
+                txReceipt.logs[1].args.requestId,
+                raffle.target
+              );
+            } catch (e) {
+              reject(e);
+            }
+          });
+        });
       });
     });
