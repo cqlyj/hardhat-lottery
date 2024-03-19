@@ -1,0 +1,43 @@
+const { ethers, network } = require("hardhat");
+const fs = require("fs");
+
+const FRONT_END_ADDRESSES_FILE =
+  "../nextjs-lottery/src/app/constants/contractAddresses.json";
+const FRONT_END_ABI_FILE = "../nextjs-lottery/src/app/constants/abi.json";
+
+module.exports = async () => {
+  if (process.env.UPDATE_FRONT_END) {
+    console.log("Updating front end");
+    updateContractAddresses();
+    updateAbi();
+  }
+};
+
+async function updateAbi() {
+  const raffle = await ethers.getContract("Raffle");
+  fs.writeFileSync(
+    FRONT_END_ABI_FILE,
+    JSON.stringify({
+      Raffle: raffle.interface.format("json"),
+    })
+  );
+}
+
+async function updateContractAddresses() {
+  const raffle = await ethers.getContract("Raffle");
+  const currentAddress = JSON.parse(
+    fs.readFileSync(FRONT_END_ADDRESSES_FILE),
+    "utf-8"
+  );
+  const chainId = network.config.chainId.toString();
+  if (chainId in currentAddress) {
+    if (!currentAddress[chainId].includes(raffle.target)) {
+      currentAddress[chainId].push(raffle.target);
+    }
+  } else {
+    currentAddress[chainId] = [raffle.target];
+  }
+  fs.writeFileSync(FRONT_END_ADDRESSES_FILE, JSON.stringify(currentAddress));
+}
+
+module.exports.tags = ["all", "frontend"];
