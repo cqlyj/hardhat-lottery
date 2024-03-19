@@ -18,7 +18,7 @@ async function updateAbi() {
   fs.writeFileSync(
     FRONT_END_ABI_FILE,
     JSON.stringify({
-      Raffle: raffle.interface.format("json"),
+      Raffle: raffle,
     })
   );
 }
