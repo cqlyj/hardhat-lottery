@@ -15,12 +15,8 @@ module.exports = async () => {
 
 async function updateAbi() {
   const raffle = await ethers.getContract("Raffle");
-  fs.writeFileSync(
-    FRONT_END_ABI_FILE,
-    JSON.stringify({
-      Raffle: raffle,
-    })
-  );
+  const abiArray = raffle.interface.fragments;
+  fs.writeFileSync(FRONT_END_ABI_FILE, JSON.stringify(abiArray));
 }
 
 async function updateContractAddresses() {
