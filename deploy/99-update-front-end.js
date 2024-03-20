@@ -7,9 +7,9 @@ const FRONT_END_ABI_FILE = "../nextjs-lottery/src/app/constants/abi.json";
 
 module.exports = async () => {
   if (process.env.UPDATE_FRONT_END) {
-    console.log("Updating front end");
-    updateContractAddresses();
-    updateAbi();
+    console.log("Updating front end...");
+    await updateContractAddresses();
+    await updateAbi();
   }
 };
 
@@ -17,6 +17,7 @@ async function updateAbi() {
   const raffle = await ethers.getContract("Raffle");
   const abiArray = raffle.interface.fragments;
   fs.writeFileSync(FRONT_END_ABI_FILE, JSON.stringify(abiArray));
+  console.log("Updating ABI in front end...");
 }
 
 async function updateContractAddresses() {
@@ -34,6 +35,7 @@ async function updateContractAddresses() {
     currentAddress[chainId] = [raffle.target];
   }
   fs.writeFileSync(FRONT_END_ADDRESSES_FILE, JSON.stringify(currentAddress));
+  console.log("Updating contract addresses in front end...");
 }
 
 module.exports.tags = ["all", "frontend"];
